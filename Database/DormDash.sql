@@ -1,0 +1,6 @@
+DROP DATABASE IF EXISTS DormDash;
+
+CREATE DATABASE DormDash;
+
+USE DormDash;
+
