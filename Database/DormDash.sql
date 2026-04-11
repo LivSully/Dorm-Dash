@@ -168,7 +168,7 @@ END $$
 CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int, OUT P boolean)
 BEGIN
 	INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
-    IF Q>=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
+    IF Q<=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
 		UPDATE Inventory SET Quantity = Q WHERE ItemName = N;
         SET P = True;
 	ELSE
