@@ -9,10 +9,10 @@ import java.sql.SQLException;
 public class InventoryDataProvider {
 
     // This is the method that calls the inventory stored procedure
-    public boolean insertInventoryItem(String name, String category, int quantity, double price) {
+    public boolean addInventoryItem(String name, int quantity, double price) {
 
         // This is the stored procedure call for adding inventory
-        String sql = "{CALL sp_add_inventory_item(?, ?, ?, ?)}";
+        String sql = "{CALL sp_add_inventory_item(?, ?, ?)}";
 
         try {
             // This is getting the shared database connection
@@ -23,9 +23,8 @@ public class InventoryDataProvider {
 
             // This is setting the procedure input values
             statement.setString(1, name);
-            statement.setString(2, category);
-            statement.setInt(3, quantity);
-            statement.setDouble(4, price);
+            statement.setInt(2, quantity);
+            statement.setDouble(3, price);
 
             // This is executing the stored procedure
             statement.execute();

@@ -49,9 +49,6 @@ public class Main {
                         System.out.print("Enter item name: ");
                         String itemName = scanner.nextLine();
 
-                        System.out.print("Enter category: ");
-                        String category = scanner.nextLine();
-
                         System.out.print("Enter quantity: ");
                         int quantity = scanner.nextInt();
                         scanner.nextLine();
@@ -61,7 +58,7 @@ public class Main {
                         scanner.nextLine();
 
                         // This is calling the inventory workflow
-                        boolean inventoryAdded = inventoryService.addInventoryItem(itemName, category, quantity, price);
+                        boolean inventoryAdded = inventoryService.addInventoryItem(itemName, quantity, price);
 
                         // This is displaying the result of the inventory workflow
                         if (inventoryAdded) {
