@@ -1,33 +1,26 @@
 package bll;
 
-// This is importing the order data provider from the data access layer
-import dal.OrderDataProvider;
-
-// This is the business logic class for order related tasks
+// This is the business logic class for library related tasks
 public class LibraryService {
 
-    // This is the data provider object used for order database operations
-    private OrderDataProvider orderDataProvider;
-
-    // This is the constructor that initializes the order data provider
+    // This is the constructor for the library service
     public LibraryService() {
-        orderDataProvider = new OrderDataProvider();
     }
 
-    // This is the method that validates the student ID before placing an order
-    public String placeOrder(int studentId) {
+    // This is the method that validates the library request input
+    public String createLibraryRequest(int studentIdForLibrary, String bookTitle) {
 
-        // This is checking if the student ID is valid
-        if (studentId <= 0) {
+        // This is checking if the student ID is invalid
+        if (studentIdForLibrary <= 0) {
             return "Invalid student ID.";
         }
 
-        // This is sending the valid order request to the data provider
-        return orderDataProvider.submitOrder(studentId);
-    }
+        // This is checking if the book title is empty
+        if (bookTitle == null || bookTitle.trim().isEmpty()) {
+            return "Invalid book title.";
+        }
 
-    public String createLibraryRequest(int studentIdForLibrary, String bookTitle) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createLibraryRequest'");
+        // This is a placeholder message until the library workflow is fully implemented
+        return "Library request created for student ID " + studentIdForLibrary + " for book: " + bookTitle;
     }
 }
