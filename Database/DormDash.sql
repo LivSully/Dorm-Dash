@@ -4,226 +4,281 @@ CREATE DATABASE DormDash;
 
 USE DormDash;
 
--- building nodes referenced by buildingname to take input from clients
--- no building name duplicates on the same campus
+DROP TABLE IF EXISTS Deliveries;
+DROP TABLE IF EXISTS OrderItems;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Inventory;
+DROP TABLE IF EXISTS Employee;
+DROP TABLE IF EXISTS Student;
+DROP TABLE IF EXISTS Paths;
+DROP TABLE IF EXISTS Rooms;
 DROP TABLE IF EXISTS Building;
 
-CREATE TABLE Building(
-BuildingName varchar(50) not null,
-PRIMARY KEY (BuildingName)
+CREATE TABLE Building (
+    BuildingName VARCHAR(50) NOT NULL,
+    PRIMARY KEY (BuildingName)
 );
 
--- some buildings may have the same room number, but no individual building has duplicate room numbers
-DROP TABLE IF EXISTS Rooms;
-
-CREATE TABLE Rooms(
-Room varchar(10) not null,
-BuildingName varchar(50) not null,
-PRIMARY KEY (BuildingName, Room),
-FOREIGN KEY (BuildingName) REFERENCES Building(BuildingName) ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE Rooms (
+    Room VARCHAR(10) NOT NULL,
+    BuildingName VARCHAR(50) NOT NULL,
+    PRIMARY KEY (BuildingName, Room),
+    FOREIGN KEY (BuildingName) REFERENCES Building(BuildingName)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
-
--- time from one building to another building, paths labeled by ints
-DROP TABLE IF EXISTS Paths;
 
 CREATE TABLE Paths (
-PathId int auto_increment,
-StartBuilding varchar(50) not null,
-EndBuilding varchar(50) not null,
-PathTime int not null,
-PRIMARY KEY (PathId),
-FOREIGN KEY (StartBuilding) REFERENCES Building(BuildingName)ON DELETE CASCADE ON UPDATE CASCADE,
-FOREIGN KEY (EndBuilding) REFERENCES Building(BuildingName)ON DELETE CASCADE ON UPDATE CASCADE,
-UNIQUE (StartBuilding, EndBuilding)
+    PathId INT AUTO_INCREMENT,
+    StartBuilding VARCHAR(50) NOT NULL,
+    EndBuilding VARCHAR(50) NOT NULL,
+    PathTime INT NOT NULL,
+    PRIMARY KEY (PathId),
+    FOREIGN KEY (StartBuilding) REFERENCES Building(BuildingName)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (EndBuilding) REFERENCES Building(BuildingName)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    UNIQUE (StartBuilding, EndBuilding)
 );
-
--- Each student has a student id, and if a student is an employee then their id is in the employee table
--- Each student has a building and room
-DROP TABLE IF EXISTS Student;
 
 CREATE TABLE Student (
-StudentId int not null,
-FirstName varchar(50)  not null,
-LastName varchar(50)  not null,
-PhoneNumber varchar(20) not null,
-Email varchar(100) not null,
-BuildingName varchar(50) not null,
-Room varchar(10) not null,
-PRIMARY KEY (StudentId),
-FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room) ON UPDATE CASCADE ON DELETE CASCADE
+    StudentId INT NOT NULL,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    PhoneNumber VARCHAR(20) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    BuildingName VARCHAR(50) NOT NULL,
+    Room VARCHAR(10) NOT NULL,
+    PRIMARY KEY (StudentId),
+    FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
-
--- Each employee is identified by their student id
--- Each employee has a designated time that they start their shift, and an end time that is 2 hours later
-DROP TABLE IF EXISTS Employee;
 
 CREATE TABLE Employee (
-StudentId int not null,
-StartTime time not null,
-EndTime time generated always as (ADDTIME(StartTime, '02:00:00')),
-PRIMARY KEY (StudentId),
-FOREIGN KEY (StudentId) REFERENCES Student(StudentId) ON UPDATE CASCADE ON DELETE CASCADE
+    StudentId INT NOT NULL,
+    StartTime TIME NOT NULL,
+    EndTime TIME GENERATED ALWAYS AS (ADDTIME(StartTime, '02:00:00')),
+    PRIMARY KEY (StudentId),
+    FOREIGN KEY (StudentId) REFERENCES Student(StudentId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
-
-DROP TABLE IF EXISTS Inventory;
 
 CREATE TABLE Inventory (
-ItemName varchar(100) not null,
-Quantity int not null,
-PricePer decimal(10,2) not null,
-PRIMARY KEY (ItemName)
+    ItemName VARCHAR(100) NOT NULL,
+    Quantity INT NOT NULL,
+    PricePer DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (ItemName)
 );
-
-
--- Room doesn't have to be filled out (in the case where there is a library delivery)
--- pickup for library deliveries and dropoff for library deliveries are scheduled as 2 orders
-DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
-OrderId int auto_increment,
-StudentId int not null,
-OrderTime time not null,
-OrderDate date not null,
-BuildingName varchar(50) not null,
-Room varchar(10),
-PRIMARY KEY (OrderId),
-FOREIGN KEY (StudentId) REFERENCES Student(StudentId) ON UPDATE CASCADE ON DELETE CASCADE,
-FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room) ON UPDATE CASCADE ON DELETE CASCADE,
-UNIQUE(StudentId, OrderDate)
+    OrderId INT AUTO_INCREMENT,
+    StudentId INT NOT NULL,
+    OrderTime TIME NOT NULL,
+    OrderDate DATE NOT NULL,
+    BuildingName VARCHAR(50) NOT NULL,
+    Room VARCHAR(10) NOT NULL,
+    PRIMARY KEY (OrderId),
+    FOREIGN KEY (StudentId) REFERENCES Student(StudentId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    UNIQUE (StudentId, OrderDate)
 );
-
-
--- how many of each item were purchased per order
-DROP TABLE IF EXISTS OrdersItems;
 
 CREATE TABLE OrderItems (
-OrderId int,
-ItemName varchar(100),
-ItemQuantity int not null,
-PRIMARY KEY (OrderId, ItemName),
-FOREIGN KEY (OrderId) REFERENCES Orders(OrderId) ON UPDATE CASCADE ON DELETE CASCADE,
-FOREIGN KEY (ItemName) REFERENCES Inventory(ItemName) ON UPDATE CASCADE ON DELETE CASCADE
+    OrderId INT NOT NULL,
+    ItemName VARCHAR(100) NOT NULL,
+    ItemQuantity INT NOT NULL,
+    PRIMARY KEY (OrderId, ItemName),
+    FOREIGN KEY (OrderId) REFERENCES Orders(OrderId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (ItemName) REFERENCES Inventory(ItemName)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
-
-
--- deliveries made, what order it was, the employee making the delivery, what time the delivery was made
-DROP TABLE IF EXISTS Deliveries;
 
 CREATE TABLE Deliveries (
-DeliveryId int auto_increment,
-OrderId int,
-EmployeeId int,
-DeliveryTime time,
-DeliveryDay date,
-TimeTaken int,
-PRIMARY KEY (DeliveryId),
-FOREIGN KEY (EmployeeId) REFERENCES Employee(StudentId)
+    DeliveryId INT AUTO_INCREMENT,
+    OrderId INT NOT NULL,
+    EmployeeId INT NOT NULL,
+    DeliveryTime TIME NOT NULL,
+    DeliveryDay DATE NOT NULL,
+    TimeTaken INT NOT NULL,
+    PRIMARY KEY (DeliveryId),
+    FOREIGN KEY (OrderId) REFERENCES Orders(OrderId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (EmployeeId) REFERENCES Employee(StudentId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
-
-
--- returns a result set of all employees who are on shift at a given time
 DELIMITER $$
 
 CREATE PROCEDURE GetAvailableEmployees(IN T TIME)
 BEGIN
-    SELECT Employee.StudentId, FirstName, LastName, StartTime, EndTime
-    FROM Employee INNER JOIN Student ON Employee.StudentId = Student.StudentId
-    WHERE StartTime <= T AND EndTime > T;
+    SELECT Employee.StudentId, Student.FirstName, Student.LastName, Employee.StartTime, Employee.EndTime
+    FROM Employee
+    INNER JOIN Student ON Employee.StudentId = Student.StudentId
+    WHERE Employee.StartTime <= T AND Employee.EndTime > T;
 END $$
 
-
-
--- returns the weighted graph (how long it takes to travel from building to building)
 CREATE PROCEDURE GetGraphInfo()
 BEGIN
-	SELECT StartBuilding, EndBuilding, PathTime FROM Paths;
+    SELECT StartBuilding, EndBuilding, PathTime
+    FROM Paths;
 END $$
 
-
-
--- used to add inventory (employees only)
-CREATE PROCEDURE InputInventory(IN I varchar(100), IN Q int, P decimal(10,2))
+CREATE PROCEDURE InputInventory(IN I VARCHAR(100), IN Q INT, IN P DECIMAL(10,2))
 BEGIN
-	INSERT INTO Inventory(ItemName, Quantity, PricePer) VALUES (I, Q, P);
+    INSERT INTO Inventory(ItemName, Quantity, PricePer)
+    VALUES (I, Q, P)
+    ON DUPLICATE KEY UPDATE
+        Quantity = Quantity + Q,
+        PricePer = P;
 END $$
 
-
-
--- returns result set of the current inventory
 CREATE PROCEDURE GetInventory()
 BEGIN
-	SELECT ItemName, Quantity, PricePer FROM Inventory;
+    SELECT ItemName, Quantity, PricePer
+    FROM Inventory;
 END $$
 
-
--- returns a boolean (true if a student has ordered today, false if they havent)
-CREATE FUNCTION StudentOrderedToday(I int, T Date)
+CREATE FUNCTION StudentOrderedToday(I INT, T DATE)
 RETURNS BOOLEAN
 DETERMINISTIC
 BEGIN
-	RETURN EXISTS(
-		SELECT 1 FROM Orders WHERE StudentId = I AND OrderDate = T
-	);
-
+    RETURN EXISTS (
+        SELECT 1
+        FROM Orders
+        WHERE StudentId = I AND OrderDate = T
+    );
 END $$
 
-
--- creates an order and returns the order id (for the purpose of inputting items to order with the OrderItems method
-CREATE PROCEDURE CreateOrder(IN SI int, IN OT time, IN OD date, IN BN varchar(50), IN R varchar(10), OUT ID int)
+CREATE PROCEDURE CreateOrder(
+    IN SI INT,
+    IN OT TIME,
+    IN OD DATE,
+    IN BN VARCHAR(50),
+    IN R VARCHAR(10),
+    OUT ID INT
+)
 BEGIN
-	INSERT INTO Orders (StudentId, OrderTime, OrderDate, BuildingName, Room) VALUES (SI,OT,OD,BN,R);
+    INSERT INTO Orders (StudentId, OrderTime, OrderDate, BuildingName, Room)
+    VALUES (SI, OT, OD, BN, R);
+
     SET ID = LAST_INSERT_ID();
 END $$
 
-
--- adds items to created order (CreateOrder and OrderItems are meant to be used in succession)
--- seperation is so that students can place one order for many different items
--- returns if the order was possible
-CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int, OUT P boolean)
+CREATE PROCEDURE AddOrderItem(
+    IN O INT,
+    IN N VARCHAR(100),
+    IN Q INT,
+    OUT P BOOLEAN
+)
 BEGIN
-	INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
-    IF Q<=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
-		UPDATE Inventory SET Quantity = Q WHERE ItemName = N;
-        SET P = True;
-	ELSE
-		SET P = False;
-	END IF;
+    DECLARE CurrentQuantity INT;
+
+    SELECT Quantity INTO CurrentQuantity
+    FROM Inventory
+    WHERE ItemName = N;
+
+    IF CurrentQuantity IS NOT NULL AND Q <= CurrentQuantity THEN
+        INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity)
+        VALUES (O, N, Q);
+
+        UPDATE Inventory
+        SET Quantity = Quantity - Q
+        WHERE ItemName = N;
+
+        SET P = TRUE;
+    ELSE
+        SET P = FALSE;
+    END IF;
 END $$
 
-
--- adds an order and the employee id to Deliveries table once the delivery is made
-CREATE PROCEDURE CreateDelivery(O int, E int, T time, D date, S int)
+CREATE PROCEDURE CreateDelivery(
+    IN O INT,
+    IN E INT,
+    IN T TIME,
+    IN D DATE,
+    IN TT INT
+)
 BEGIN
-	INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDate, StopNumber) VALUES (O, E, T, D, S);
+    INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDay, TimeTaken)
+    VALUES (O, E, T, D, TT);
 END $$
 
--- return delivery path of employee on certain day
-CREATE PROCEDURE DeliveryPathOfEmployee(E int, D date)
+CREATE PROCEDURE DeliveryPathOfEmployee(IN E INT, IN D DATE)
 BEGIN
-	SELECT BuildingName, Room FROM Deliveries INNER JOIN Orders ON Deliveries.OrderId = Orders.OrderId ORDER BY Deliveries.DeliveryTime;
+    SELECT Orders.BuildingName, Orders.Room
+    FROM Deliveries
+    INNER JOIN Orders ON Deliveries.OrderId = Orders.OrderId
+    WHERE Deliveries.EmployeeId = E
+      AND Deliveries.DeliveryDay = D
+    ORDER BY Deliveries.DeliveryTime;
 END $$
 
--- return goods delivered by employees on certain day
-CREATE PROCEDURE GoodsDeliveredByEmployee(E int, D date)
+CREATE PROCEDURE GoodsDeliveredByEmployee(IN E INT, IN D DATE)
 BEGIN
-	SELECT ItemName, ItemQuantity FROM Orders INNER JOIN OrderItems ON Orders.OrderId = OrderItems.OrderId INNER JOIN Deliveries ON Deliveries.OrderId = Orders.OrderId WHERE EmployeeId = E AND DeliveryDate = D;
+    SELECT OrderItems.ItemName, OrderItems.ItemQuantity
+    FROM Orders
+    INNER JOIN OrderItems ON Orders.OrderId = OrderItems.OrderId
+    INNER JOIN Deliveries ON Deliveries.OrderId = Orders.OrderId
+    WHERE Deliveries.EmployeeId = E
+      AND Deliveries.DeliveryDay = D;
 END $$
 
--- returns minutes spent doing delivery for certain employee on certain day
-CREATE FUNCTION ShiftTime(E int, D date)
-RETURNS int
+CREATE FUNCTION ShiftTime(E INT, D DATE)
+RETURNS INT
 DETERMINISTIC
 BEGIN
-	DECLARE TotalTime int;
-	SELECT SUM(TimeTaken) INTO TotalTime FROM Deliveries WHERE EmployeeId = E AND DeliveryDate = D;
-    RETURN TotalTime;
+    DECLARE TotalTime INT;
+
+    SELECT SUM(TimeTaken) INTO TotalTime
+    FROM Deliveries
+    WHERE EmployeeId = E
+      AND DeliveryDay = D;
+
+    RETURN IFNULL(TotalTime, 0);
+END $$
+
+CREATE PROCEDURE sp_add_inventory_item(
+    IN p_item_name VARCHAR(100),
+    IN p_quantity INT,
+    IN p_price DECIMAL(10,2)
+)
+BEGIN
+    INSERT INTO Inventory (ItemName, Quantity, PricePer)
+    VALUES (p_item_name, p_quantity, p_price)
+    ON DUPLICATE KEY UPDATE
+        Quantity = Quantity + p_quantity,
+        PricePer = p_price;
+END $$
+
+CREATE PROCEDURE sp_submit_order(IN p_student_id INT)
+BEGIN
+    DECLARE v_building VARCHAR(50);
+    DECLARE v_room VARCHAR(10);
+
+    SELECT BuildingName, Room
+    INTO v_building, v_room
+    FROM Student
+    WHERE StudentId = p_student_id;
+
+    INSERT INTO Orders (StudentId, OrderTime, OrderDate, BuildingName, Room)
+    VALUES (p_student_id, CURTIME(), CURDATE(), v_building, v_room);
 END $$
 
 DELIMITER ;
 
-
--- Inserts (Chatgpt generated):
 INSERT INTO Building (BuildingName) VALUES
 ('Maple Hall'), ('Oak Hall'), ('Pine Hall'), ('Cedar Hall'), ('Birch Hall'),
 ('Elm Hall'), ('Ash Hall'), ('Willow Hall'), ('Spruce Hall'), ('Cherry Hall'),
@@ -241,21 +296,21 @@ INSERT INTO Rooms (BuildingName, Room) VALUES
 ('Chestnut Hall','101'), ('Walnut Hall','101'), ('Linden Hall','101'), ('Olive Hall','101'), ('Bamboo Hall','101');
 
 INSERT INTO Paths (StartBuilding, EndBuilding, PathTime) VALUES
-('Maple Hall','Oak Hall',5),('Oak Hall','Pine Hall',4),
-('Cedar Hall','Pine Hall',6),('Birch Hall','Cedar Hall',3),
-('Birch Hall','Elm Hall',5),('Ash Hall','Elm Hall',7),
-('Ash Hall','Willow Hall',4),('Spruce Hall','Willow Hall',6),
-('Cherry Hall','Spruce Hall',5),('Cherry Hall','Hawthorn Hall',4),
-('Hawthorn Hall','Magnolia Hall',6),('Magnolia Hall','Redwood Hall',7),
-('Redwood Hall','Sequoia Hall',3),('Palm Hall','Sequoia Hall',6),
-('Cypress Hall','Palm Hall',4),('Cypress Hall','Poplar Hall',5),
-('Fir Hall','Poplar Hall',6),('Fir Hall','Juniper Hall',4),
-('Alder Hall','Juniper Hall',5),('Alder Hall','Sycamore Hall',6),
-('Beech Hall','Sycamore Hall',4),('Beech Hall','Hemlock Hall',5),
-('Dogwood Hall','Hemlock Hall',6),('Aspen Hall','Dogwood Hall',4),
-('Aspen Hall','Chestnut Hall',5),('Chestnut Hall','Walnut Hall',6),
-('Linden Hall','Walnut Hall',4),('Linden Hall','Olive Hall',5),
-('Bamboo Hall','Olive Hall',6),('Bamboo Hall','Maple Hall',7);
+('Maple Hall','Oak Hall',5), ('Oak Hall','Pine Hall',4),
+('Cedar Hall','Pine Hall',6), ('Birch Hall','Cedar Hall',3),
+('Birch Hall','Elm Hall',5), ('Ash Hall','Elm Hall',7),
+('Ash Hall','Willow Hall',4), ('Spruce Hall','Willow Hall',6),
+('Cherry Hall','Spruce Hall',5), ('Cherry Hall','Hawthorn Hall',4),
+('Hawthorn Hall','Magnolia Hall',6), ('Magnolia Hall','Redwood Hall',7),
+('Redwood Hall','Sequoia Hall',3), ('Palm Hall','Sequoia Hall',6),
+('Cypress Hall','Palm Hall',4), ('Cypress Hall','Poplar Hall',5),
+('Fir Hall','Poplar Hall',6), ('Fir Hall','Juniper Hall',4),
+('Alder Hall','Juniper Hall',5), ('Alder Hall','Sycamore Hall',6),
+('Beech Hall','Sycamore Hall',4), ('Beech Hall','Hemlock Hall',5),
+('Dogwood Hall','Hemlock Hall',6), ('Aspen Hall','Dogwood Hall',4),
+('Aspen Hall','Chestnut Hall',5), ('Chestnut Hall','Walnut Hall',6),
+('Linden Hall','Walnut Hall',4), ('Linden Hall','Olive Hall',5),
+('Bamboo Hall','Olive Hall',6), ('Bamboo Hall','Maple Hall',7);
 
 INSERT INTO Student VALUES
 (1,'John','Smith','1111111111','john1@email.com','Maple Hall','101'),
@@ -291,8 +346,8 @@ INSERT INTO Student VALUES
 
 INSERT INTO Employee (StudentId, StartTime) VALUES
 (1,'08:00:00'), (3,'10:00:00'), (5,'12:00:00'),
-(6,'13:00:00'), (8,'15:00:00'), (9,'16:00:00'), 
-(11,'08:30:00'), (12,'09:30:00'), (13,'10:30:00'), 
+(6,'13:00:00'), (8,'15:00:00'), (9,'16:00:00'),
+(11,'08:30:00'), (12,'09:30:00'), (13,'10:30:00'),
 (15,'12:30:00'), (19,'16:30:00'), (20,'17:30:00'),
 (21,'08:15:00'), (24,'11:15:00'), (25,'12:15:00'),
 (26,'13:15:00'), (27,'14:15:00');
