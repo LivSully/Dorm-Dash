@@ -182,9 +182,9 @@ END $$
 -- returns if the order was possible
 CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int, OUT P boolean)
 BEGIN
-	INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
     IF Q<=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
-		UPDATE Inventory SET Quantity = Q WHERE ItemName = N;
+		INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
+		UPDATE Inventory SET Quantity = Quantity-Q WHERE ItemName = N;
         SET P = True;
 	ELSE
 		SET P = False;
@@ -193,9 +193,9 @@ END $$
 
 
 -- adds an order and the employee id to Deliveries table once the delivery is made
-CREATE PROCEDURE CreateDelivery(O int, E int, T time, D date, S int)
+CREATE PROCEDURE CreateDelivery(O int, E int, DT time, DD date, TT int)
 BEGIN
-	INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDate, StopNumber) VALUES (O, E, T, D, S);
+	INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDay, TimeTaken) VALUES (O, E, DT, DD, TT);
 END $$
 
 -- return delivery path of employee on certain day
