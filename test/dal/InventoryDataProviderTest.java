@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 public class InventoryDataProviderTest {
 
     private static final String TEST_ITEM_NAME = "JUnit StoredProc Item";
-    private static final String CATEGORY = "TestCategory";
     private static final int QUANTITY = 7;
     private static final double PRICE = 4.99;
 
@@ -27,12 +26,16 @@ public class InventoryDataProviderTest {
     public void setUp() throws SQLException {
         provider = new InventoryDataProvider();
         connection = DataMgr.getConnection();
-        deleteIfExists(TEST_ITEM_NAME);
+        if (connection != null) {
+            deleteIfExists(TEST_ITEM_NAME);
+        }
     }
 
     @After
     public void tearDown() throws SQLException {
-        deleteIfExists(TEST_ITEM_NAME);
+        if (connection != null) {
+            deleteIfExists(TEST_ITEM_NAME);
+        }
     }
 
     @Test
