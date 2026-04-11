@@ -1,0 +1,107 @@
+@startuml
+title Dorm Dash Class Diagram
+package app {
+  class Main {
+    +main(String[] args)
+  }
+}
+package bll {
+  class InventoryService {
+    -InventoryDataProvider inventoryDataProvider
+    +InventoryService()
+    +boolean addInventoryItem(String itemName, int quantity, double price)
+  }
+
+  class OrderService {
+    -OrderDataProvider orderDataProvider
+    +OrderService()
+    +String placeOrder(int studentId)
+  }
+
+  class LibraryService {
+    +LibraryService()
+    +String createLibraryRequest(int studentId, String bookTitle)
+  }
+
+  class ReportService {
+    -ReportDataProvider reportDataProvider
+    +ReportService()
+    +void buildWeeklyReport()
+  }
+}
+package dal {
+  class InventoryDataProvider {
+    +boolean addInventoryItem(String name, int quantity, double price)
+    +boolean insertInventoryItem(String name, int quantity, double price)
+  }
+
+  class OrderDataProvider {
+    +String submitOrder(int studentId)
+  }
+
+  class ReportDataProvider {
+    +void generateWeeklyReport()
+  }
+
+  class DataMgr {
+    +static Connection getConnection()
+  }
+}
+package models {
+  class InventoryItem {
+    -int itemId
+    -String itemName
+    -String category
+    -int quantity
+    -double price
+  }
+
+  class Order {
+    -int orderId
+    -int customerId
+    -String orderDate
+    -String deliveryTime
+  }
+
+  class Customer {
+    -int customerId
+    -String name
+    -String phoneNumber
+    -String email
+    -String dormAddress
+  }
+
+  class Employee {
+    -int employeeId
+    -String name
+    -String phoneNumber
+    -String email
+  }
+
+  class LibraryRequest {
+    -int requestId
+    -int customerId
+    -String bookTitle
+    -String pickupTime
+    -String returnTime
+  }
+
+  class WeeklyReport {
+    -int employeeId
+    -String employeeName
+    -String reportDay
+    -String deliveryPath
+    -String deliveredGoods
+    -double timeSpent
+  }
+}
+
+Main --> InventoryService
+Main --> OrderService
+Main --> LibraryService
+Main --> ReportService
+InventoryService --> InventoryDataProvider
+OrderService --> OrderDataProvider
+ReportService --> ReportDataProvider
+InventoryDataProvider --> DataMgr
+@enduml

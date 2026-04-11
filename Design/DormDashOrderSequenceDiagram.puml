@@ -1,0 +1,17 @@
+@startuml
+title Dorm Dash Submit Order Sequence Diagram
+actor User
+participant Main
+participant OrderService
+participant OrderDataProvider
+participant DataMgr
+
+User -> Main: select "Submit Dorm Dash Order"
+Main -> OrderService: placeOrder(studentId)
+OrderService -> OrderDataProvider: submitOrder(studentId)
+OrderDataProvider -> DataMgr: getConnection()
+DataMgr --> OrderDataProvider: Connection
+OrderDataProvider --> OrderService: "Order submitted successfully." / error message
+OrderService --> Main: return result
+Main --> User: display result
+@enduml

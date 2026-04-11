@@ -1,0 +1,20 @@
+@startuml
+title Dorm Dash Add Inventory Activity Diagram
+start
+:Enter item name;
+:Enter quantity;
+:Enter price;
+if (item name valid?
+and quantity > 0?
+and price > 0?) then (yes)
+  :Call InventoryService.addInventoryItem(...);
+  if (database operation succeeds?) then (yes)
+    :Display "Inventory item added successfully.";
+  else (no)
+    :Display "Failed to add inventory item.";
+  endif
+else (no)
+  :Display "Invalid inventory input.";
+endif
+stop
+@enduml
