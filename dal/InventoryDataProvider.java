@@ -37,4 +37,10 @@ public class InventoryDataProvider {
             return false;
         }
     }
+
+    // This alias method is provided for tests that expect an insertInventoryItem
+    // API.
+    public boolean insertInventoryItem(String name, int quantity, double price) {
+        return addInventoryItem(name, quantity, price);
+    }
 }

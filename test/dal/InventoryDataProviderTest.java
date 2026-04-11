@@ -37,7 +37,7 @@ public class InventoryDataProviderTest {
 
     @Test
     public void insertInventoryItem_validStoredProcedureExecutes_itemExistsInInventory() throws SQLException {
-        boolean inserted = provider.insertInventoryItem(TEST_ITEM_NAME, CATEGORY, QUANTITY, PRICE);
+        boolean inserted = provider.insertInventoryItem(TEST_ITEM_NAME, QUANTITY, PRICE);
 
         assertTrue("Stored procedure should return true for valid inputs", inserted);
 
