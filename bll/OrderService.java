@@ -1,43 +1,28 @@
 package bll;
 
-// This is importing the inventory data provider from the data access layer
-import dal.InventoryDataProvider;
+// This is importing the order data provider from the data access layer
+import dal.OrderDataProvider;
 
-// This is the business logic class for inventory related tasks
+// This is the business logic class for order related tasks
 public class OrderService {
 
     // This is the data provider object used to access the database
-    private InventoryDataProvider inventoryDataProvider;
+    private OrderDataProvider orderDataProvider;
 
-    // This is the constructor that initializes the inventory data provider
+    // This is the constructor that initializes the order data provider
     public OrderService() {
-        inventoryDataProvider = new InventoryDataProvider();
+        orderDataProvider = new OrderDataProvider();
     }
 
-    // This is the method that validates inventory input and sends it to the DAL
-    public boolean addInventoryItem(String name, String category, int quantity, double price) {
+    // This is the method that validates the student ID and sends the order request to the DAL
+    public String placeOrder(int studentIdForOrder) {
 
-        // This is checking if the item name is empty
-        if (name == null || name.trim().isEmpty()) {
-            return false;
-        }
-
-        // This is checking if the category is empty
-        if (category == null || category.trim().isEmpty()) {
-            return false;
-        }
-
-        // This is checking for invalid quantity or price values
-        if (quantity < 0 || price < 0) {
-            return false;
+        // This is checking if the student ID is invalid
+        if (studentIdForOrder <= 0) {
+            return "Invalid student ID.";
         }
 
         // This is passing valid data to the data provider
-        return inventoryDataProvider.insertInventoryItem(name, category, quantity, price);
-    }
-
-    public String placeOrder(int studentIdForOrder) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'placeOrder'");
+        return orderDataProvider.submitOrder(studentIdForOrder);
     }
 }
