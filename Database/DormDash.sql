@@ -80,7 +80,7 @@ PRIMARY KEY (ItemName)
 DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
-OrderId int,
+OrderId int auto_increment,
 StudentId int not null,
 OrderTime time not null,
 OrderDate date not null,
@@ -106,9 +106,70 @@ FOREIGN KEY (ItemName) REFERENCES Inventory(ItemName) ON UPDATE CASCADE ON DELET
 
 
 
+-- returns a result set of all employees who are on shift at a given time
+DELIMITER $$
+
+CREATE PROCEDURE GetAvailableEmployees(IN T TIME)
+BEGIN
+    SELECT EmployeeId, FirstName, LastName, StartTime, EndTime
+    FROM Employee INNER JOIN Student ON Employee.StudentId = Student.StudentId
+    WHERE StartTime <= T AND EndTime > T;
+END $$
 
 
 
+-- returns the weighted graph (how long it takes to travel from building to building)
+CREATE PROCEDURE GetGraphInfo()
+BEGIN
+	SELECT StartBuilding, EndBuilding, PathTime FROM Paths;
+END $$
+
+
+
+-- used to add inventory (employees only)
+CREATE PROCEDURE InputInventory(IN I varchar(100), IN Q int, P decimal(10,2))
+BEGIN
+	INSERT INTO Inventory(ItemName, Quantity, PricePer) VALUES (I, Q, P);
+END $$
+
+
+
+-- returns result set of the current inventory
+CREATE PROCEDURE GetInventory()
+BEGIN
+	SELECT ItemName, Quantity, PricePer FROM Inventory;
+END $$
+
+
+-- returns a boolean (true if a student has ordered today, false if they havent)
+CREATE FUNCTION StudentOrderedToday(I int, T Date)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+	IF I in (SELECT StudentId FROM Orders WHERE OrderDate = T) THEN
+		RETURN True;
+	ELSE
+		RETURN False;
+	END IF;
+END $$
+
+
+-- creates an order and returns the order id (for the purpose of inputting items to order with the OrderItems method
+CREATE PROCEDURE CreateOrder(IN SI int, IN OT time, IN OD date, IN BN varchar(50), IN R varchar(10), OUT ID int)
+BEGIN
+	INSERT INTO Orders (StudentId, OrderTime, OrderDate, BuildingName, Room) VALUES (SI,OT,OD,BN,R);
+    SET ID = LAST_INSERT_ID();
+END $$
+
+
+-- adds items to created order (CreateOrder and OrderItems are meant to be used in succession)
+-- seperation is so that students can place one order for many different items
+CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int)
+BEGIN
+	INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
+END $$
+
+DELIMITER ;
 
 
 -- Inserts (Chatgpt generated):
@@ -144,7 +205,6 @@ INSERT INTO Paths (StartBuilding, EndBuilding, PathTime) VALUES
 ('Aspen Hall','Chestnut Hall',5),('Chestnut Hall','Walnut Hall',6),
 ('Linden Hall','Walnut Hall',4),('Linden Hall','Olive Hall',5),
 ('Bamboo Hall','Olive Hall',6),('Bamboo Hall','Maple Hall',7);
-
 
 INSERT INTO Student VALUES
 (1,'John','Smith','1111111111','john1@email.com','Maple Hall','101'),
@@ -198,38 +258,37 @@ INSERT INTO Inventory VALUES
 ('Cereal',30,4.00), ('Ramen',100,1.50), ('Mac and Cheese',80,2.50),
 ('Chicken Wrap',40,6.00), ('Burger',30,7.50), ('Fries',60,3.00);
 
-INSERT INTO Orders (OrderId, StudentId, OrderTime, OrderDate, BuildingName, Room) VALUES
-(1,1,'12:00:00','2026-04-01','Maple Hall','101'),
-(2,2,'12:05:00','2026-04-01','Oak Hall','101'),
-(3,3,'12:10:00','2026-04-01','Pine Hall','101'),
-(4,4,'12:15:00','2026-04-01','Cedar Hall','101'),
-(5,5,'12:20:00','2026-04-01','Birch Hall','101'),
-(6,6,'12:25:00','2026-04-01','Elm Hall','101'),
-(7,7,'12:30:00','2026-04-01','Ash Hall','101'),
-(8,8,'12:35:00','2026-04-01','Willow Hall','101'),
-(9,9,'12:40:00','2026-04-01','Spruce Hall','101'),
-(10,10,'12:45:00','2026-04-01','Cherry Hall','101'),
-(11,11,'12:50:00','2026-04-01','Hawthorn Hall','101'),
-(12,12,'12:55:00','2026-04-01','Magnolia Hall','101'),
-(13,13,'13:00:00','2026-04-01','Redwood Hall','101'),
-(14,14,'13:05:00','2026-04-01','Sequoia Hall','101'),
-(15,15,'13:10:00','2026-04-01','Palm Hall','101'),
-(16,16,'13:15:00','2026-04-01','Cypress Hall','101'),
-(17,17,'13:20:00','2026-04-01','Poplar Hall','101'),
-(18,18,'13:25:00','2026-04-01','Fir Hall','101'),
-(19,19,'13:30:00','2026-04-01','Juniper Hall','101'),
-(20,20,'13:35:00','2026-04-01','Alder Hall','101'),
-(21,21,'13:40:00','2026-04-01','Sycamore Hall','101'),
-(22,22,'13:45:00','2026-04-01','Beech Hall','101'),
-(23,23,'13:50:00','2026-04-01','Hemlock Hall','101'),
-(24,24,'13:55:00','2026-04-01','Dogwood Hall','101'),
-(25,25,'14:00:00','2026-04-01','Aspen Hall','101'),
-(26,26,'14:05:00','2026-04-01','Chestnut Hall','101'),
-(27,27,'14:10:00','2026-04-01','Walnut Hall','101'),
-(28,28,'14:15:00','2026-04-01','Linden Hall','101'),
-(29,29,'14:20:00','2026-04-01','Olive Hall','101'),
-(30,30,'14:25:00','2026-04-01','Bamboo Hall','101');
-
+INSERT INTO Orders (StudentId, OrderTime, OrderDate, BuildingName, Room) VALUES
+(1,'12:00:00','2026-04-01','Maple Hall','101'),
+(2,'12:05:00','2026-04-01','Oak Hall','101'),
+(3,'12:10:00','2026-04-01','Pine Hall','101'),
+(4,'12:15:00','2026-04-01','Cedar Hall','101'),
+(5,'12:20:00','2026-04-01','Birch Hall','101'),
+(6,'12:25:00','2026-04-01','Elm Hall','101'),
+(7,'12:30:00','2026-04-01','Ash Hall','101'),
+(8,'12:35:00','2026-04-01','Willow Hall','101'),
+(9,'12:40:00','2026-04-01','Spruce Hall','101'),
+(10,'12:45:00','2026-04-01','Cherry Hall','101'),
+(11,'12:50:00','2026-04-01','Hawthorn Hall','101'),
+(12,'12:55:00','2026-04-01','Magnolia Hall','101'),
+(13,'13:00:00','2026-04-01','Redwood Hall','101'),
+(14,'13:05:00','2026-04-01','Sequoia Hall','101'),
+(15,'13:10:00','2026-04-01','Palm Hall','101'),
+(16,'13:15:00','2026-04-01','Cypress Hall','101'),
+(17,'13:20:00','2026-04-01','Poplar Hall','101'),
+(18,'13:25:00','2026-04-01','Fir Hall','101'),
+(19,'13:30:00','2026-04-01','Juniper Hall','101'),
+(20,'13:35:00','2026-04-01','Alder Hall','101'),
+(21,'13:40:00','2026-04-01','Sycamore Hall','101'),
+(22,'13:45:00','2026-04-01','Beech Hall','101'),
+(23,'13:50:00','2026-04-01','Hemlock Hall','101'),
+(24,'13:55:00','2026-04-01','Dogwood Hall','101'),
+(25,'14:00:00','2026-04-01','Aspen Hall','101'),
+(26,'14:05:00','2026-04-01','Chestnut Hall','101'),
+(27,'14:10:00','2026-04-01','Walnut Hall','101'),
+(28,'14:15:00','2026-04-01','Linden Hall','101'),
+(29,'14:20:00','2026-04-01','Olive Hall','101'),
+(30,'14:25:00','2026-04-01','Bamboo Hall','101');
 
 INSERT INTO OrderItems (OrderId, ItemName, ItemQuantity) VALUES
 (1,'Water Bottle',2),
