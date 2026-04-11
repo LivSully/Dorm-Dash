@@ -88,7 +88,8 @@ BuildingName varchar(50) not null,
 Room varchar(10),
 PRIMARY KEY (OrderId),
 FOREIGN KEY (StudentId) REFERENCES Student(StudentId) ON UPDATE CASCADE ON DELETE CASCADE,
-FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room) ON UPDATE CASCADE ON DELETE CASCADE
+FOREIGN KEY (BuildingName, Room) REFERENCES Rooms(BuildingName, Room) ON UPDATE CASCADE ON DELETE CASCADE,
+UNIQUE(StudentId, OrderDate)
 );
 
 
@@ -105,13 +106,28 @@ FOREIGN KEY (ItemName) REFERENCES Inventory(ItemName) ON UPDATE CASCADE ON DELET
 );
 
 
+-- deliveries made, what order it was, the employee making the delivery, what time the delivery was made
+DROP TABLE IF EXISTS Deliveries;
+
+CREATE TABLE Deliveries (
+DeliveryId int auto_increment,
+OrderId int,
+EmployeeId int,
+DeliveryTime time,
+DeliveryDay date,
+TimeTaken int,
+PRIMARY KEY (DeliveryId),
+FOREIGN KEY (EmployeeId) REFERENCES Employee(StudentId)
+);
+
+
 
 -- returns a result set of all employees who are on shift at a given time
 DELIMITER $$
 
 CREATE PROCEDURE GetAvailableEmployees(IN T TIME)
 BEGIN
-    SELECT EmployeeId, FirstName, LastName, StartTime, EndTime
+    SELECT Employee.StudentId, FirstName, LastName, StartTime, EndTime
     FROM Employee INNER JOIN Student ON Employee.StudentId = Student.StudentId
     WHERE StartTime <= T AND EndTime > T;
 END $$
@@ -146,11 +162,10 @@ CREATE FUNCTION StudentOrderedToday(I int, T Date)
 RETURNS BOOLEAN
 DETERMINISTIC
 BEGIN
-	IF I in (SELECT StudentId FROM Orders WHERE OrderDate = T) THEN
-		RETURN True;
-	ELSE
-		RETURN False;
-	END IF;
+	RETURN EXISTS(
+		SELECT 1 FROM Orders WHERE StudentId = I AND OrderDate = T
+	);
+
 END $$
 
 
@@ -174,6 +189,35 @@ BEGIN
 	ELSE
 		SET P = False;
 	END IF;
+END $$
+
+
+-- adds an order and the employee id to Deliveries table once the delivery is made
+CREATE PROCEDURE CreateDelivery(O int, E int, T time, D date, S int)
+BEGIN
+	INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDate, StopNumber) VALUES (O, E, T, D, S);
+END $$
+
+-- return delivery path of employee on certain day
+CREATE PROCEDURE DeliveryPathOfEmployee(E int, D date)
+BEGIN
+	SELECT BuildingName, Room FROM Deliveries INNER JOIN Orders ON Deliveries.OrderId = Orders.OrderId ORDER BY Deliveries.DeliveryTime;
+END $$
+
+-- return goods delivered by employees on certain day
+CREATE PROCEDURE GoodsDeliveredByEmployee(E int, D date)
+BEGIN
+	SELECT ItemName, ItemQuantity FROM Orders INNER JOIN OrderItems ON Orders.OrderId = OrderItems.OrderId INNER JOIN Deliveries ON Deliveries.OrderId = Orders.OrderId WHERE EmployeeId = E AND DeliveryDate = D;
+END $$
+
+-- returns minutes spent doing delivery for certain employee on certain day
+CREATE FUNCTION ShiftTime(E int, D date)
+RETURNS int
+DETERMINISTIC
+BEGIN
+	DECLARE TotalTime int;
+	SELECT SUM(TimeTaken) INTO TotalTime FROM Deliveries WHERE EmployeeId = E AND DeliveryDate = D;
+    RETURN TotalTime;
 END $$
 
 DELIMITER ;
