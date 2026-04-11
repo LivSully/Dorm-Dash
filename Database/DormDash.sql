@@ -164,9 +164,16 @@ END $$
 
 -- adds items to created order (CreateOrder and OrderItems are meant to be used in succession)
 -- seperation is so that students can place one order for many different items
-CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int)
+-- returns if the order was possible
+CREATE PROCEDURE OrderItems(IN O int, IN N varchar(100), IN Q int, OUT P boolean)
 BEGIN
 	INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
+    IF Q>=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
+		UPDATE Inventory SET Quantity = Q WHERE ItemName = N;
+        SET P = True;
+	ELSE
+		SET P = False;
+	END IF;
 END $$
 
 DELIMITER ;
