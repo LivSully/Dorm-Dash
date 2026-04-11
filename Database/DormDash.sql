@@ -184,6 +184,7 @@ CREATE PROCEDURE AddOrderItem(
     OUT P BOOLEAN
 )
 BEGIN
+<<<<<<< HEAD
     DECLARE CurrentQuantity INT;
 
     SELECT Quantity INTO CurrentQuantity
@@ -214,6 +215,22 @@ CREATE PROCEDURE CreateDelivery(
 BEGIN
     INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDay, TimeTaken)
     VALUES (O, E, T, D, TT);
+=======
+    IF Q<=(SELECT Quantity FROM Inventory WHERE ItemName = N) THEN
+		INSERT INTO OrderItems(OrderId, ItemName, ItemQuantity) VALUES (O, N, Q);
+		UPDATE Inventory SET Quantity = Quantity-Q WHERE ItemName = N;
+        SET P = True;
+	ELSE
+		SET P = False;
+	END IF;
+END $$
+
+
+-- adds an order and the employee id to Deliveries table once the delivery is made
+CREATE PROCEDURE CreateDelivery(O int, E int, DT time, DD date, TT int)
+BEGIN
+	INSERT INTO Deliveries(OrderId, EmployeeId, DeliveryTime, DeliveryDay, TimeTaken) VALUES (O, E, DT, DD, TT);
+>>>>>>> 74d838be688fecbef37c7c712b043ebf323f7906
 END $$
 
 CREATE PROCEDURE DeliveryPathOfEmployee(IN E INT, IN D DATE)
