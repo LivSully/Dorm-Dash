@@ -1,0 +1,1 @@
+This folder contains design documents and diagrams for the Dorm Dash project.
