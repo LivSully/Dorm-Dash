@@ -12,7 +12,7 @@ public class InventoryDataProvider {
     public boolean addInventoryItem(String name, int quantity, double price) {
 
         // This is the stored procedure call for adding inventory
-        String sql = "{CALL sp_add_inventory_item(?, ?, ?)}";
+        String sql = "{CALL sp_add_inventory_item(?, ?, ?, ?)}";
 
         try {
             // This is getting the shared database connection
